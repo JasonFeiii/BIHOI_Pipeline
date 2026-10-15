@@ -1,0 +1,70 @@
+[
+  {
+    "path": ".",
+    "valid": false,
+    "reason": "Git metadata empty or invalid"
+  },
+  {
+    "path": "HO-Cap-Annotation",
+    "valid": true,
+    "commits_all_refs": "11",
+    "remotes_redacted": "remote.origin.url https://github.com/JWRoboticsVision/HO-Cap-Annotation.git\n",
+    "tracked_files": 120,
+    "tracked_assets": 8,
+    "large_history_blobs": []
+  },
+  {
+    "path": "sam3",
+    "valid": true,
+    "commits_all_refs": "62",
+    "remotes_redacted": "remote.origin.url https://github.com/facebookresearch/sam3.git\n",
+    "tracked_files": 525,
+    "tracked_assets": 279,
+    "large_history_blobs": []
+  },
+  {
+    "path": "sam3/sam2",
+    "valid": true,
+    "commits_all_refs": "104",
+    "remotes_redacted": "remote.origin.url https://github.com/facebookresearch/sam2.git\n",
+    "tracked_files": 569,
+    "tracked_assets": 217,
+    "large_history_blobs": []
+  },
+  {
+    "path": "MV-SAM3D",
+    "valid": true,
+    "commits_all_refs": "11",
+    "remotes_redacted": "remote.origin.url https://github.com/devinli123/MV-SAM3D.git\n",
+    "tracked_files": 159,
+    "tracked_assets": 19,
+    "large_history_blobs": []
+  },
+  {
+    "path": "MV-SAM3D/sam-3d-objects",
+    "valid": true,
+    "commits_all_refs": "60",
+    "remotes_redacted": "remote.origin.url https://github.com/facebookresearch/sam-3d-objects.git\n",
+    "tracked_files": 416,
+    "tracked_assets": 283,
+    "large_history_blobs": []
+  },
+  {
+    "path": "MV-SAM3D/Depth-Anything-3",
+    "valid": true,
+    "commits_all_refs": "30",
+    "remotes_redacted": "remote.origin.url https://github.com/ByteDance-Seed/Depth-Anything-3.git\n",
+    "tracked_files": 134,
+    "tracked_assets": 5,
+    "large_history_blobs": []
+  },
+  {
+    "path": "Depth-Anything-3",
+    "valid": true,
+    "commits_all_refs": "30",
+    "remotes_redacted": "remote.origin.url https://github.com/ByteDance-Seed/Depth-Anything-3.git\n",
+    "tracked_files": 134,
+    "tracked_assets": 5,
+    "large_history_blobs": []
+  }
+]

@@ -1,0 +1,350 @@
+[
+  {
+    "kind": "executable",
+    "name": "ffmpeg",
+    "ok": true,
+    "detail": "/usr/bin/ffmpeg"
+  },
+  {
+    "kind": "executable",
+    "name": "ffprobe",
+    "ok": true,
+    "detail": "/usr/bin/ffprobe"
+  },
+  {
+    "kind": "executable",
+    "name": "git",
+    "ok": true,
+    "detail": "/usr/bin/git"
+  },
+  {
+    "kind": "driver",
+    "name": "nvidia-smi",
+    "ok": true,
+    "detail": "0, NVIDIA H200, 570.148.08, 143771 MiB\n1, NVIDIA H200, 570.148.08, 143771 MiB\n2, NVIDIA H200, 570.148.08, 143771 MiB\n3, NVIDIA H200, 570.148.08, 143771 MiB\n4, NVIDIA H200, 570.148.08, 143771 MiB\n5, NVIDIA H200, 570.148.08, 143771 MiB\n6, NVIDIA H200, 570.148.08, 143771 MiB\n7, NVIDIA H200, 570.148.08, 143771 MiB"
+  },
+  {
+    "kind": "environment",
+    "name": "handobj_webui",
+    "ok": true,
+    "detail": {
+      "python": "3.10.21",
+      "imports": [
+        {
+          "module": "gradio",
+          "ok": true,
+          "path": "<existing environment>/gradio/__init__.py"
+        },
+        {
+          "module": "numpy",
+          "ok": true,
+          "path": "<existing environment>/numpy/__init__.py"
+        },
+        {
+          "module": "PIL",
+          "ok": true,
+          "path": "<existing environment>/PIL/__init__.py"
+        },
+        {
+          "module": "interaction_capture_webui",
+          "ok": true,
+          "path": "webui/interaction_capture_webui.py"
+        },
+        {
+          "module": "web_panel",
+          "ok": true,
+          "path": "scripts/hoi_qualitative/web_panel.py"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "environment",
+    "name": "easymocap",
+    "ok": true,
+    "detail": {
+      "python": "3.9.23",
+      "imports": [
+        {
+          "module": "cv2",
+          "ok": true,
+          "path": "<existing environment>/cv2/__init__.py"
+        },
+        {
+          "module": "scipy",
+          "ok": true,
+          "path": "<existing environment>/scipy/__init__.py"
+        },
+        {
+          "module": "torch",
+          "ok": true,
+          "path": "<existing environment>/torch/__init__.py"
+        },
+        {
+          "module": "easymocap.smplmodel.body_param",
+          "ok": true,
+          "path": "pipeline/easymocap/smplmodel/body_param.py"
+        },
+        {
+          "module": "easymocap.mytools.camera_utils",
+          "ok": true,
+          "path": "pipeline/easymocap/mytools/camera_utils.py"
+        },
+        {
+          "module": "pyrender",
+          "ok": true,
+          "path": "<existing environment>/pyrender/__init__.py"
+        },
+        {
+          "module": "single_sequence",
+          "ok": true,
+          "path": "scripts/hoi_qualitative/single_sequence.py"
+        },
+        {
+          "module": "torch.cuda",
+          "ok": true,
+          "torch": "2.3.1+cu121",
+          "cuda": "12.1",
+          "devices": 8
+        }
+      ]
+    }
+  },
+  {
+    "kind": "environment",
+    "name": "sam3",
+    "ok": true,
+    "detail": {
+      "python": "3.12.14",
+      "imports": [
+        {
+          "module": "sam3",
+          "ok": true,
+          "path": "pipeline/sam3/sam3/__init__.py"
+        },
+        {
+          "module": "sam2.build_sam",
+          "ok": true,
+          "path": "pipeline/sam3/sam2/sam2/build_sam.py"
+        },
+        {
+          "module": "timm",
+          "ok": true,
+          "path": "<existing environment>/timm/__init__.py"
+        },
+        {
+          "module": "cv2",
+          "ok": true,
+          "path": "<existing environment>/cv2/__init__.py"
+        },
+        {
+          "module": "torch.cuda",
+          "ok": true,
+          "torch": "2.10.0+cu128",
+          "cuda": "12.8",
+          "devices": 8
+        }
+      ]
+    }
+  },
+  {
+    "kind": "environment",
+    "name": "depthanything3",
+    "ok": true,
+    "detail": {
+      "python": "3.11.16",
+      "imports": [
+        {
+          "module": "depth_anything_3.api",
+          "ok": true,
+          "path": "pipeline/Depth-Anything-3/src/depth_anything_3/api.py"
+        },
+        {
+          "module": "cv2",
+          "ok": true,
+          "path": "<existing environment>/cv2/__init__.py"
+        },
+        {
+          "module": "torch.cuda",
+          "ok": true,
+          "torch": "2.10.0+cu128",
+          "cuda": "12.8",
+          "devices": 8
+        }
+      ]
+    }
+  },
+  {
+    "kind": "environment",
+    "name": "sam3d-objects",
+    "ok": true,
+    "detail": {
+      "python": "3.11.0",
+      "imports": [
+        {
+          "module": "sam3d_objects",
+          "ok": true,
+          "path": "pipeline/MV-SAM3D/sam3d_objects/__init__.py"
+        },
+        {
+          "module": "sam3d_objects.pipeline.inference_pipeline_pointmap",
+          "ok": true,
+          "path": "pipeline/MV-SAM3D/sam3d_objects/pipeline/inference_pipeline_pointmap.py"
+        },
+        {
+          "module": "pytorch3d",
+          "ok": true,
+          "path": "<existing environment>/pytorch3d/__init__.py"
+        },
+        {
+          "module": "kaolin",
+          "ok": true,
+          "path": "<existing environment>/kaolin/__init__.py"
+        },
+        {
+          "module": "nvdiffrast.torch",
+          "ok": true,
+          "path": "<existing environment>/nvdiffrast/torch/__init__.py"
+        },
+        {
+          "module": "spconv.pytorch",
+          "ok": true,
+          "path": "<existing environment>/spconv/pytorch/__init__.py"
+        },
+        {
+          "module": "gsplat",
+          "ok": true,
+          "path": "<existing environment>/gsplat/__init__.py"
+        },
+        {
+          "module": "moge.model.v1",
+          "ok": true,
+          "path": "<existing environment>/moge/model/v1.py"
+        },
+        {
+          "module": "torch.cuda",
+          "ok": true,
+          "torch": "2.5.1+cu121",
+          "cuda": "12.1",
+          "devices": 8
+        }
+      ]
+    }
+  },
+  {
+    "kind": "environment",
+    "name": "foundationpose",
+    "ok": true,
+    "detail": {
+      "python": "3.11.16",
+      "imports": [
+        {
+          "module": "Utils",
+          "ok": true,
+          "path": "pipeline/FoundationPose/Utils.py"
+        },
+        {
+          "module": "estimater",
+          "ok": true,
+          "path": "pipeline/FoundationPose/estimater.py"
+        },
+        {
+          "module": "pytorch3d",
+          "ok": true,
+          "path": "<existing environment>/pytorch3d/__init__.py"
+        },
+        {
+          "module": "nvdiffrast.torch",
+          "ok": true,
+          "path": "<existing environment>/nvdiffrast/torch/__init__.py"
+        },
+        {
+          "module": "kornia",
+          "ok": true,
+          "path": "<existing environment>/kornia/__init__.py"
+        },
+        {
+          "module": "torch.cuda",
+          "ok": true,
+          "torch": "2.6.0+cu124",
+          "cuda": "12.4",
+          "devices": 8
+        }
+      ]
+    }
+  },
+  {
+    "kind": "environment",
+    "name": "wilor",
+    "ok": true,
+    "detail": {
+      "python": "3.10.21",
+      "imports": [
+        {
+          "module": "wilor",
+          "ok": true,
+          "path": null
+        },
+        {
+          "module": "demo_fast",
+          "ok": true,
+          "path": "pipeline/WiLoR/demo_fast.py"
+        },
+        {
+          "module": "ultralytics",
+          "ok": true,
+          "path": "<existing environment>/ultralytics/__init__.py"
+        },
+        {
+          "module": "smplx",
+          "ok": true,
+          "path": "<existing environment>/smplx/__init__.py"
+        },
+        {
+          "module": "torch.cuda",
+          "ok": true,
+          "torch": "2.6.0+cu126",
+          "cuda": "12.6",
+          "devices": 8
+        }
+      ]
+    }
+  },
+  {
+    "kind": "environment",
+    "name": "hocap-annotation",
+    "ok": true,
+    "detail": {
+      "python": "3.10.21",
+      "imports": [
+        {
+          "module": "hocap_annotation.loss",
+          "ok": true,
+          "path": ".external/HO-Cap-Annotation/hocap_annotation/loss/__init__.py"
+        },
+        {
+          "module": "meshsdf_loss_cuda",
+          "ok": true,
+          "path": "<existing environment>/meshsdf_loss_cuda.cpython-310-x86_64-linux-gnu.so"
+        },
+        {
+          "module": "smplx",
+          "ok": true,
+          "path": "<existing environment>/smplx/__init__.py"
+        },
+        {
+          "module": "pyrender",
+          "ok": true,
+          "path": "<existing environment>/pyrender/__init__.py"
+        },
+        {
+          "module": "torch.cuda",
+          "ok": true,
+          "torch": "2.5.1+cu118",
+          "cuda": "11.8",
+          "devices": 8
+        }
+      ]
+    }
+  }
+]

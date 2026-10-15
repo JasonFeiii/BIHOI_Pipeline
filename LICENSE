@@ -1,0 +1,11 @@
+This repository is a source aggregation. It is not relicensed under a single permissive license.
+
+Original EasyMocap code and modifications remain subject to licenses/EasyMocap.txt.
+Vendored third-party code retains its own license and copyright notices, as mapped in THIRD_PARTY.md.
+SAM3 and SAM3D use their supplied custom licenses. FoundationPose and EasyMocap have noncommercial restrictions.
+WiLoR modified code is NOT distributed here. It requires a separate licensed local import.
+HO-Cap is installed externally under its upstream license; its source license file says AGPL-3.0.
+Model weights, MANO assets, and datasets are not distributed. Their separate licenses still apply.
+No blanket commercial-use or redistribution permission is granted by this aggregation.
+
+V2 includes modified WAPR core under LGPL-2.1-only; see web_demos/third_party/WAPR/LICENSE and LOCAL_CHANGES.md.
