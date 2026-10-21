@@ -1,111 +1,22 @@
-# Hand-Object Interaction Pipeline v2
+# BIHOI
 
-A **31-camera hand–object interaction processing pipeline** with a Gradio WebUI. From synchronized multi-view videos, it produces object masks, depth maps, 3D meshes, object poses, hand reconstruction, and standardized exports.
+将多视角视频处理为物体掩码、深度、三维模型、物体位姿和手物交互结果，支持 WebUI 操作。
 
-> **Reproducibility status:** this source release does not yet provide an independently reproducible full pipeline. **Hands requires a project-specific WiLoR source variant that is not published; Final requires its fitted MANO outputs.** Public WiLoR weights alone do not supply that variant. FMHR calibration weights and templates are publicly available and downloaded from a pinned official revision. MANO requires individual registration. See [reproducibility and remaining release blockers](docs/REPRODUCIBILITY.md) before installing the GPU stages.
+**运行条件：** Linux、NVIDIA GPU、Conda/Miniforge、Git、FFmpeg。处理使用 **10 FPS、640×360**。
+**当前限制：** Hands / Final 仍需未公开的 WiLoR 适配代码；仅下载本仓库不能运行这两个阶段。
 
-> **10 FPS VERSION:** The current pipeline is designed for **10 FPS processing**. Input videos may have a different native FPS, but the **Hands** and **Final** stages require processing at **10 FPS**. The final export may be resampled to 30 FPS; that does **not** mean the inference pipeline runs at 30 FPS.
+## 1. 安装
 
-V2 integrates the current **FoundationPose / WAPR 6D object tracking** and live WebUI into the portable pipeline. It preserves the hand-calibration workflow from v1.
-
-- First frame: best mask, fused masked-depth XYZ with outlier removal, **240 FoundationPose hypotheses → 5 refinements → best pose → six-candidate WAPR/SAPR selection**.
-- Tracking: compare **WAPR(C), SAPR(C), SAPR(WAPR(C))** across views.
-- No consensus: best mask + triangulated XYZ, **96 rotation hypotheses → WAPR → SAPR → WBPS**.
-- Live preview: prominent green pose mesh and sparse red depth points at **35% opacity**. Full-sequence processing and result playback use the prepared 10 FPS timeline.
-- Standalone [WAPR demo](web_demos/README.md) for RGB-D object pose estimation and result export.
-
-See [6D tracking behavior and setup](docs/POSE_TRACKING_V2.md) and [reproducibility status](docs/REPRODUCIBILITY.md). Models, videos, measured calibration and runtime outputs are supplied separately.
-
-## 1. Prepare your data
-
-Place your videos under a data root in the following structure. **Each person must provide hand shape (beta) parameters** in `restored_flat_real_scale.pt`; use the separate [Hand Calibration setup](#hand-calibration-once-per-data-collector) below to generate them.
-
-```text
-data/
-└── rigid/
-    └── <person_name>/                        # Person / hand prior
-        ├── calib/
-        │   └── restored_flat_real_scale.pt  # Required for hand fitting
-        └── <settings>/
-            └── videos/
-                ├── take01/
-                │   ├── node13_cam0.mp4
-                │   ├── node13_cam1.mp4
-                │   └── ...          # Up to 31 synchronized camera videos
-                └── take02/          # Optional additional take
-                    └── ...
-```
-
-Prepare the **camera calibration** in a separate folder:
-
-```text
-calibration/
-├── intri.yml
-├── extri.yml
-└── corrected_gsformat.pkl                 # Currently required by preparation scripts
-```
-
-The camera files must match your calibrated camera IDs and order; the system **does not calibrate cameras automatically**. The hand/final pipeline **requires 10 FPS processing** and defaults to **640×360**. See [exact camera names, calibration format, and optional inputs](docs/DATA_FORMAT.md).
-
-## Hand Calibration (once per data collector)
-
-**10 FPS setup:** Calibrate each person's hand once before running the main pipeline. This is a separate step, also available in the WebUI.
-
-**Input** (example: `calibration_capture`):
-
-```text
-data/hand_calibration/calibration_capture/
-├── videos/       
-├── intri.yml
-└── extri.yml
-```
-
-Use camera calibration matching **640×360** extracted frames.
-
-**Setup & run** (from the repository root):
+下载仓库后，在终端执行：
 
 ```bash
-# After reviewing/accepting the psbody-mesh license:
-HOI_ACCEPT_PSBODY_MESH_LICENSE=1 bash scripts/install_hand_calibration_deps.sh
-
-bash run_hand_calibration_args.sh \
-    --data_name calibration_capture \
-    --person_name participant \
-    --start_sec 0 \
-    --end_sec 0.1 \
-    --hand_side right
-```
-
-Requires the licensed **WiLoR/MANO** assets and **FMHR checkpoints/templates** in addition to the installed environments. See [full setup instructions](docs/HAND_CALIBRATION.md).
-
-**Output:** `data/rigid/<person_name>/calib/restored_flat_real_scale.pt` (MANO beta parameters used by the Hands/Final stages). Specify `--person_name` explicitly, or supply your own mapping. No collector identities or calibration captures are distributed.
-
-## 2. Install environments
-
-**Requirements:** Linux, NVIDIA GPU(s), a compatible driver, Conda/Miniforge, Git, FFmpeg/ffprobe, and CUDA build tools for native extensions. High-memory GPUs are recommended.
-
-```bash
-git clone <repository-url> BIHOI_Pipeline
 cd BIHOI_Pipeline
 cp .env.example .env
-```
-
-Edit `.env` to set the paths and GPUs for your machine:
-
-```dotenv
-HOI_DATA_ROOT=/absolute/path/to/data
-HOI_CALIBRATION_DIR=/absolute/path/to/calibration
-WEBUI_ALLOWED_GPUS=0,1
-WEBUI_PASSWORD=choose-a-password
-```
-
-Then install the project's **nine separate Conda environments**:
-
-```bash
 bash scripts/install.sh --component all --skip-native
 ```
 
-Native GPU components also need CUDA toolkits matching their PyTorch builds:
+<details>
+<summary>首次安装还需编译 CUDA 扩展（展开查看命令）</summary>
 
 ```bash
 conda install -p .environments/sam3d-objects -c nvidia cuda-toolkit=12.1
@@ -113,17 +24,16 @@ conda install -p .environments/foundationpose -c nvidia cuda-toolkit=12.4
 conda install -p .environments/wapr -c nvidia cuda-toolkit=12.8
 conda install -p .environments/hocap-annotation -c nvidia cuda-toolkit=11.8
 
-bash scripts/build_native.sh sam3d-objects
-bash scripts/build_native.sh foundationpose
-bash scripts/build_native.sh wapr
-bash scripts/build_native.sh hocap-annotation
+for component in sam3d-objects foundationpose wapr hocap-annotation; do
+    bash scripts/build_native.sh "$component"
+done
 ```
 
-These are setup instructions, **not a guarantee of a clean install on every GPU system**. For version-specific requirements and troubleshooting, see [DEPENDENCIES.md](DEPENDENCIES.md).
+</details>
 
-## 3. Download model weights
+## 2. 准备模型
 
-First accept any required upstream licenses and obtain Hugging Face access for the **gated SAM3 and SAM3D** models. Then run:
+先申请 SAM3 / SAM3D 的 Hugging Face 访问权限，再下载：
 
 ```bash
 for model in sam3 sam2 da3 mv-sam3d moge wilor fmhr; do
@@ -131,12 +41,11 @@ for model in sam3 sam2 da3 mv-sam3d moge wilor fmhr; do
 done
 ```
 
-FMHR's GCN checkpoints and templates are downloaded from the official repository at a fixed commit and verified with SHA-256. They are not private project checkpoints. Two model families require **manual downloads**:
+另外手动准备：
 
-- **FoundationPose:** follow the [official weight instructions](https://github.com/NVlabs/FoundationPose#download-weights). Put `model_best.pth` in both `.models/foundationpose/2023-10-28-18-33-37/` and `.models/foundationpose/2024-01-11-20-02-45/`.
-- **MANO:** register at [the official MANO website](https://mano.is.tue.mpg.de/). Place `MANO_LEFT.pkl` and `MANO_RIGHT.pkl` in `.models/mano/`, then run `bash scripts/prepare_mano_regressors.sh`.
-
-The **hand reconstruction stage** additionally requires the separately licensed, project-compatible WiLoR source variant; it is **not included in this repository**. Once you have permission and that variant, import it with:
+- **FoundationPose：** 按[官方说明](https://github.com/NVlabs/FoundationPose#download-weights)下载，将两个 `model_best.pth` 分别放到 `.models/foundationpose/2023-10-28-18-33-37/` 和 `.models/foundationpose/2024-01-11-20-02-45/`。
+- **MANO：** 在[官网](https://mano.is.tue.mpg.de/)注册下载，将 `MANO_LEFT.pkl`、`MANO_RIGHT.pkl` 放到 `.models/mano/`，执行 `bash scripts/prepare_mano_regressors.sh`。
+- **WiLoR 适配代码：** 如已获得兼容版本及使用权限，执行下列命令；公开版 WiLoR 权重不能替代适配代码。
 
 ```bash
 .environments/handobj_webui/bin/python scripts/import_wilor.py --source /path/to/licensed/WiLoR
@@ -144,34 +53,38 @@ The **hand reconstruction stage** additionally requires the separately licensed,
 bash scripts/check_env.sh
 ```
 
-Checkpoints are stored in `.models/` by default. See [third-party licensing and restrictions](THIRD_PARTY.md).
+## 3. 放置数据
 
-## 4. Start the WebUI
+默认目录结构如下，视频须同步，标定须匹配相机及处理分辨率：
+
+```text
+.calibration/
+├── intri.yml
+├── extri.yml
+└── corrected_gsformat.pkl
+data/rigid/participant/
+├── calib/restored_flat_real_scale.pt
+└── sequence/videos/take01/
+    ├── node13_cam0.mp4
+    ├── node13_cam1.mp4
+    └── ...
+```
+
+`participant`、`sequence` 可自行命名。每位参与者需先做一次[手部标定](docs/HAND_CALIBRATION.md)，生成 `restored_flat_real_scale.pt`。
+数据在其他位置时，在 `.env` 设置 `HOI_DATA_ROOT` 和 `HOI_CALIBRATION_DIR`。
+
+## 4. 启动并运行
+
+在 `.env` 设置 `WEBUI_PASSWORD`；用 `WEBUI_ALLOWED_GPUS=0` 指定 GPU（多卡可填 `0,1`）。
 
 ```bash
 bash scripts/run_webui.sh
 ```
 
-Open **http://127.0.0.1:7860** and sign in with the credentials configured in `.env` (default username: `operator`).
+打开 **http://127.0.0.1:7860**，用户名为 `operator`，密码为 `.env` 中设置的值。远程服务器需先转发 7860 端口。
 
-Passwords are never printed to logs. If `WEBUI_PASSWORD` is unset, the launcher writes a generated password to an owner-only runtime file and prints only its location.
+1. 选择数据目录、序列和 take，填写物体描述。
+2. 设置 **10 FPS、640×360**，按顺序运行预处理、重建、物体跟踪、Hands、Final。
+3. 在页面查看或导出结果；标准化结果位于序列目录的 `standardized_hoi_30fps/`，按 30 FPS 导出并保留原时长。
 
-If running on a remote GPU server, forward port **7860** through SSH or VS Code. Do not expose the interface publicly without authentication.
-
-In the WebUI:
-
-1. Select your **data root**, dataset (e.g. `rigid/participant/my_sequence`), and take.
-2. Set an **object text prompt**, **10 FPS** (required for Hands / Final), and **640×360**.
-3. Choose individual stages: **Preprocess → Reconstruction → Object Tracking → Hands → Final Export**. Hands and the normal Final workflow remain unavailable to a fresh clone until the unpublished WiLoR variant and other listed prerequisites are supplied.
-4. Inspect masks, depth, mesh, tracking, hand results, and previews directly in the interface.
-
-Processed outputs are saved under the selected dataset (e.g. `images/`, `masks/`, `depth/`, `meshes/compressed.ply`, and `standardized_hoi_30fps/`).
-
-> **Important:** The full GPU pipeline requires your own calibrated capture, weights, MANO/person prior, and licensed WiLoR variant. New-machine end-to-end installation and inference have not yet been fully validated.
-
-
-The server accepts only `HOI_DATA_ROOT` and explicitly configured `HOI_ALLOWED_DATA_ROOTS`; browser inputs cannot add trusted roots. Exports use fresh folders under `data/exports/` (or `HOI_ALLOWED_EXPORT_ROOTS`) and do not delete existing destination files. See [security policy](docs/SECURITY.md).
-
-Standardized export receives the processed input rate explicitly: **10 FPS input → 30 FPS output**, preserving elapsed time. Existing incorrectly timed exports must be regenerated.
-
-**More details:** [Data format](docs/DATA_FORMAT.md) · [Dependencies](DEPENDENCIES.md) · [Model licenses](THIRD_PARTY.md) · [Reproducibility](docs/REPRODUCIBILITY.md) · [Integration test guide](docs/INTEGRATION.md)
+[安装问题](DEPENDENCIES.md) · [数据格式](docs/DATA_FORMAT.md) · [手部标定](docs/HAND_CALIBRATION.md) · [第三方许可证](THIRD_PARTY.md) · [当前可复现范围](docs/REPRODUCIBILITY.md)
