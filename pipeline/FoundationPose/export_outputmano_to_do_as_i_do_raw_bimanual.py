@@ -1426,17 +1426,17 @@ def main():
         description="Convert saved outputmano/contact_mano + object poses into Do-as-I-Do raw format."
     )
     parser.add_argument("--outputmano_dir", type=str, required=True,
-                        help="Existing outputmano folder, e.g. <data-root>/yeah/outputmano")
+                        help="Existing outputmano folder, e.g. <data-root>/example_sequence/outputmano")
     parser.add_argument("--test_scene_dir", type=str, required=True,
                         help="HOI/EasyMocap scene folder containing extri.yml")
     parser.add_argument("--mesh_file", type=str, required=True,
-                        help="Object mesh path, e.g. <data-root>/yeah/meshes/compressed.ply")
+                        help="Object mesh path, e.g. <data-root>/example_sequence/meshes/compressed.ply")
     parser.add_argument("--mano_dir", type=str, required=True,
                         help="Folder containing MANO_LEFT.pkl / MANO_RIGHT.pkl")
     parser.add_argument("--dai_raw_dir", type=str, required=True,
                         help="Target raw dir passed later to Do-as-I-Do --raw-dir")
     parser.add_argument("--dai_task", type=str, required=True,
-                        help="Task subfolder name, e.g. yeah")
+                        help="Task subfolder name, e.g. example_sequence")
     parser.add_argument("--dai_object_name", type=str, default="object")
     parser.add_argument(
         "--dai_hand_side",

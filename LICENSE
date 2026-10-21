@@ -1,5 +1,9 @@
 This repository is a source aggregation. It is not relicensed under a single permissive license.
 
+No release license has yet been selected for project-owned integration code.
+Do not infer a grant for that code from a parent repository or a bundled third-party license.
+This unresolved decision is tracked in docs/REPRODUCIBILITY.md.
+
 Original EasyMocap code and modifications remain subject to licenses/EasyMocap.txt.
 Vendored third-party code retains its own license and copyright notices, as mapped in THIRD_PARTY.md.
 SAM3 and SAM3D use their supplied custom licenses. FoundationPose and EasyMocap have noncommercial restrictions.

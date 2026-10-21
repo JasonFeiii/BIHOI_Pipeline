@@ -667,6 +667,8 @@ def observed_xy_range(obj_trans, hands, margin):
 
 
 def resample_all(frame_ids, input_fps, output_fps, hands, object_poses):
+    if any(not math.isfinite(float(fps)) or float(fps) <= 0 for fps in (input_fps, output_fps)):
+        raise ValueError('Input and output FPS must be finite and positive')
     frame_ids = np.asarray(frame_ids, dtype=np.float64)
     t_src = (frame_ids - frame_ids[0]) / float(input_fps)
     if len(t_src) < 2 or t_src[-1] <= 0:
@@ -767,7 +769,7 @@ def main():
     ap.add_argument("--object_pose_dir", default="")
     ap.add_argument("--mesh_file", default="")
 
-    ap.add_argument("--input_fps", type=float, default=30.0)
+    ap.add_argument("--input_fps", type=float, required=True, help="Actual sampling rate of the processed input frames; never inferred from the export name")
     ap.add_argument("--output_fps", type=float, default=30.0)
     ap.add_argument("--quat_order", choices=["wxyz", "xyzw"], default="wxyz")
     ap.add_argument("--device", default="auto", help="auto, cpu, cuda, cuda:0, ...")
@@ -808,6 +810,8 @@ def main():
     )
     ap.add_argument("--overwrite", action="store_true")
     args = ap.parse_args()
+    if any(not math.isfinite(fps) or fps <= 0 for fps in (args.input_fps, args.output_fps)):
+        ap.error('Input and output FPS must be finite and positive')
 
     root = Path(args.easymocap_root).expanduser().resolve()
     data_dir = Path(args.data_dir).expanduser().resolve() if args.data_dir else root / args.data_name
@@ -835,9 +839,14 @@ def main():
     if not mesh_file.exists():
         raise FileNotFoundError(f"Missing mesh: {mesh_file}")
 
-    if out_dir.exists() and args.overwrite:
-        shutil.rmtree(out_dir)
-    elif out_dir.exists() and any(out_dir.iterdir()):
+    if out_dir == data_dir or data_dir.is_relative_to(out_dir) or mesh_file.resolve().is_relative_to(out_dir) or any(
+        out_dir.is_relative_to(p.resolve()) or p.resolve().is_relative_to(out_dir)
+        for p in (right_dir, left_dir, object_dir, mano_dir)
+    ):
+        raise ValueError('Export directory overlaps input data or model directories')
+    if out_dir.exists() and any(p.is_symlink() for p in out_dir.rglob('*')):
+        raise ValueError('Export directory contains symlinks; refusing to overwrite')
+    if out_dir.exists() and any(out_dir.iterdir()) and not args.overwrite:
         raise FileExistsError(f"Output exists and is non-empty: {out_dir}; pass --overwrite")
     ensure_dir(out_dir)
 

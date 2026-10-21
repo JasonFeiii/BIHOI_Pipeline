@@ -1,8 +1,3 @@
 {
-  "datasets": {
-    "hands_ck": {
-      "person_name": "ck",
-      "evidence": "Original hand.md lines 390, 400 and 407 use rigid/ck/hands_ck with prior rigid/ck. The original calibration shell itself has no mapping."
-    }
-  }
+  "datasets": {}
 }

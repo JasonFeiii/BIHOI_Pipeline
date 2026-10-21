@@ -4,6 +4,8 @@ source "$(dirname -- "${BASH_SOURCE[0]}")/common.sh"
 cd -- "$HOI_PROJECT_ROOT"
 ui="$(hoi_python handobj_webui)";cpu="$(hoi_python easymocap)"
 "$ui" -m unittest discover -s tests -p test_packaging.py -v
+"$ui" -m unittest discover -s tests -p test_release_safety.py -v
+"$cpu" -m unittest discover -s tests -p test_export_timing.py -v
 "$cpu" -m unittest discover -s tests -p test_cpu_stages.py -v
 "$cpu" -m unittest discover -s tests -p test_hand_calibration.py -v
 "$ui" -m unittest discover -s scripts/hoi_qualitative/tests -p test_web_panel.py -v

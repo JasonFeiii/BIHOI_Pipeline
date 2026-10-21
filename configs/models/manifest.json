@@ -66,7 +66,14 @@
     ]
   },
   "fmhr": {
-    "manual": "Supply licensed FMHR gcn_left.pth, gcn_right.pth, TEMPLATE_LEFT.obj and TEMPLATE_RIGHT.obj under HOI_FMHR_MODEL_DIR (default .models/fmhr). No checkpoints or template meshes are distributed. Use both licensed MANO PKLs under HOI_MANO_DIR.",
+    "source": "https://github.com/agnJason/FMHR",
+    "revision": "ab624d62949eec26368bf73f73dc27b3c6a7fa4e",
+    "downloads": [
+      {"file": "gcn_left.pth", "url": "https://raw.githubusercontent.com/agnJason/FMHR/ab624d62949eec26368bf73f73dc27b3c6a7fa4e/mano/gcn_left.pth", "sha256": "158d56e94de1d6ce3ae5299a4a72d1a817479f26775ca92afa88db98ebce0ad7"},
+      {"file": "gcn_right.pth", "url": "https://raw.githubusercontent.com/agnJason/FMHR/ab624d62949eec26368bf73f73dc27b3c6a7fa4e/mano/gcn_right.pth", "sha256": "ff7333d613641a17f25e730d7b5cc0631cff110fbb53364a4457e99749b4bec2"},
+      {"file": "TEMPLATE_LEFT.obj", "url": "https://raw.githubusercontent.com/agnJason/FMHR/ab624d62949eec26368bf73f73dc27b3c6a7fa4e/mano/TEMPLATE_LEFT.obj", "sha256": "d86eda45052c0135232b31be965b1919b94fafe32fd7052d8fb83e038dbf28c2"},
+      {"file": "TEMPLATE_RIGHT.obj", "url": "https://raw.githubusercontent.com/agnJason/FMHR/ab624d62949eec26368bf73f73dc27b3c6a7fa4e/mano/TEMPLATE_RIGHT.obj", "sha256": "bf33e6f524a3c943721956895615929ac8434779cfb46f22b0a33b03016df63c"}
+    ],
     "required_files": [
       "gcn_left.pth",
       "gcn_right.pth",

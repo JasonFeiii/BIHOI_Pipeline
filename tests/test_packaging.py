@@ -1,9 +1,13 @@
 import ast,importlib.util,json,os,subprocess,sys,tempfile,unittest
 from pathlib import Path
+from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'webui'),str(ROOT/'scripts/hoi_qualitative')]
 import interaction_capture_webui as app
 class PackageTests(unittest.TestCase):
+ def setUp(self):
+  scope=patch.dict(os.environ,{'HOI_ALLOWED_DATA_ROOTS':tempfile.gettempdir()})
+  scope.start();self.addCleanup(scope.stop)
  def test_import_is_packaged(self):self.assertEqual(Path(app.__file__).resolve(),ROOT/'webui/interaction_capture_webui.py')
  def test_ui_and_visualization_panel_construct(self):self.assertGreater(len(app.make_ui(str(ROOT/'data')).blocks),250)
  def test_configuration_files_parse(self):
@@ -33,7 +37,6 @@ class PackageTests(unittest.TestCase):
       shell=app._shell_for_step(step)
       result=subprocess.run(['bash','-n'],input=shell,text=True,capture_output=True)
       self.assertEqual(result.returncode,0,step.title+result.stderr)
-      self.assertNotIn('/mnt/local/yfei/EasyMocap',shell)
       records.append((stage,take,step))
    links=[s for stage,take,s in records if take=='take02' and s.after]
    self.assertTrue(any(s.after['title']==app.MESH_RECON_STEP_TITLE for s in links))

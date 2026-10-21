@@ -646,8 +646,8 @@ class PipelineTests(unittest.TestCase):
     def test_stage_commands_route_backend_and_fix_output_path(self):
         root = ui.EASYMOCAP_ROOT
         for method in tracking_run.METHODS:
-            with self.subTest(method=method), patch.object(ui, '_ensure_pipeline_data_name', return_value='rigid/ck/test'):
-                steps = ui._tracking_steps(ui.Job('test', 'ck'), root, root, 'auto', 'auto', 640, 360, 10, 1000, method)
+            with self.subTest(method=method), patch.object(ui, '_ensure_pipeline_data_name', return_value='rigid/participant/test'):
+                steps = ui._tracking_steps(ui.Job('test', 'participant'), root, root, 'auto', 'auto', 640, 360, 10, 1000, method)
             tracker = steps[2]
             self.assertEqual(tracker.gpu, 'single')
             self.assertIn('"$GPU_PICK"', tracker.command)
@@ -671,16 +671,16 @@ class PipelineTests(unittest.TestCase):
     def test_plan_preserves_selected_method_with_skip_done(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            ds = root/'rigid/ck/test'
+            ds = root/'rigid/participant/test'
             (ds/'images').mkdir(parents=True)
             self.completed_legacy(ds)
-            args = dict(stage_sequence=['tracking'], hand_prior_name='ck', selected_datasets=['test'],
+            args = dict(stage_sequence=['tracking'], hand_prior_name='participant', selected_datasets=['test'],
                         prompt_table=[], hand_side='bimanual', data_root_str=str(root), start_sec=0, end_sec=0,
                         fps=10, width=640, height=360, ffmpeg_threads=2, da3_gpus='auto', sam3d_gpu='auto',
                         tracking_gpu='auto', postopt_gpu='auto', depth_unit='mm', pixel_stride=2, mask_erode=1,
                         max_points_per_cam=50000, max_size_mb=9.8, save_debug_pointcloud=False,
                         depth_scale=1000, max_frames=500, all_takes=False, skip_done=True)
-            with patch.object(ui, '_ensure_pipeline_data_name', return_value='rigid/ck/test'), \
+            with patch.object(ui, '_ensure_pipeline_data_name', return_value='rigid/participant/test'), \
                  patch.object(ui, 'python_for', return_value=Path(sys.executable)):
                 with self.assertRaisesRegex(ValueError, 'Nothing to run'):
                     ui._plan_steps(**args, tracking_method='foundationpose')

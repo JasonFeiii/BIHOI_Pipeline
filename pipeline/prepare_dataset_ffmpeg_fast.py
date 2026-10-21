@@ -391,7 +391,7 @@ def resize_tree(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-name", default="bowl_0820_ck")
+    parser.add_argument("--data-name", required=True)
     parser.add_argument("--calib-dir", default=".")
     parser.add_argument("--width", type=int, default=640)
     parser.add_argument("--height", type=int, default=360)

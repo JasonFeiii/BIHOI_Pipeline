@@ -1,6 +1,5 @@
 # Execution and dependency report
 
-The active launcher now starts `webui/interaction_capture_webui.py`, whose `_steps_for` and `_plan_steps` functions define seven selectable stages. The unused alternate WebUI implementation is omitted. `provenance/stages.json` records inputs, outputs, prerequisites, entrypoints and resource modes. `provenance/local-import-graph.json` records static source import relationships; `provenance/foundationpose-import-graph.json` records the specialized FoundationPose closure. Dynamic Hydra targets in the MV-SAM3D config templates are part of the dependency graph, even though they are not normal imports.
 
 ## Stage entrypoints and execution graph
 
@@ -12,7 +11,7 @@ Entrypoints:
 
 - `rename_videos_31cams.py`
 - `rename_videos_extract_frames_ffmpeg_pts_compat.py`
-- `prepare_bowl_0820_ck_ffmpeg_fast.py`
+- `prepare_dataset_ffmpeg_fast.py`
 - `webui/extract_reference_frames.py`
 - `webui/shortest_video_end.py`
 - `webui/equalize_camera_frames.py`
@@ -177,11 +176,10 @@ The primary reconstruction shares `meshes/` with later takes. Per-take video/ima
 
 The main UI dynamically imports `scripts/hoi_qualitative/web_panel.py`. Its chain is `web_panel → media_config → run_single.sh → single_sequence → render_comparison`; the independent `render_hoi.py` batch CLI uses the same validator and runner. Source tests from the original media implementation are preserved. Rendering runs in EasyMocap with EGL and requires licensed MANO assets when hands are included. Figures, snapshots, real/orbit/world cameras, roll/crop controls, batch takes, previews, completed-result checks, and texture generation are retained.
 
-Scheduler helper commands use the WebUI interpreter for Pillow/NumPy helpers, EasyMocap for OpenCV calibration synchronization, and explicit environment paths for native tools. FFmpeg/ffprobe are actual system prerequisites. tmux is optional; detached subprocess fallback remains available. ZIP/copy export, contact sheets, dataset screening, file deletion confirmation and stage resume remain part of the source. `docs/PACKAGING_CHANGES.md` documents each deliberate portability/safety adjustment.
 
 ## Excluded inactive projects
 
-Standalone 2D Gaussian Splatting viewers, Sapiens repositories, FMHR, ReconViaGen, SVOR, tapnet, unrelated EasyMocap applications, original deployment bundles, real camera calibration, model checkpoints, dataset comparison JSONs, and copied OS rendering libraries are outside the active execution graph. The complete core source packages are retained where dynamic imports or package initialization require them; optional training/demo imports inside these packages are not evidence of an enabled pipeline stage.
+Standalone 2D Gaussian Splatting viewers, Sapiens repositories, ReconViaGen, SVOR, tapnet, unrelated EasyMocap applications, original deployment bundles, real camera calibration, model checkpoints, dataset comparison JSONs, and copied OS rendering libraries are outside the active execution graph. FMHR is used by the separate hand-calibration action. The complete core source packages are retained where dynamic imports or package initialization require them; optional training/demo imports inside these packages are not evidence of an enabled pipeline stage.
 
 ## Separate per-person Hand Calibration setup
 
@@ -189,6 +187,6 @@ Standalone 2D Gaussian Splatting viewers, Sapiens repositories, FMHR, ReconViaGe
 
 Environments remain `easymocap` (CPU extraction, triangulation, FMHR CUDA inference, NumPy MANO restoration) and `wilor` (GPU detections). Extra requirements are `plyfile==1.1.3`, `pyzmq==27.2.0`, and `psbody-mesh` (observed installed version 0.4). The optional external source install is pinned to MPI-IS/mesh commit `49e70425cf373ec5269917012bda2944215c5ccd`; a fresh build at that pin is not yet verified. It needs a C++ compiler, Boost headers and OpenGL/GLU/GLUT libraries; its installer builds bundled CGAL mesh helpers. No psbody source or binaries are vendored. FMHR imports its unused MeshViewer under GLX to avoid the EGL GLUT-font import conflict; other stages retain EGL.
 
-Required private assets: both MANO PKLs under `HOI_MANO_DIR`; both FMHR GCN checkpoints and both template OBJs under `HOI_FMHR_MODEL_DIR`; WiLoR checkpoint/detector/mean-parameter assets plus the exact licensed `demo.py` added to `provenance/restricted-wilor.json`. `--check` verifies paths and all required WiLoR source hashes. Model assets remain manual operator inputs.
 
-The calibration graph is separate from the five normal processing stages. Time/FPS select extraction once; downstream stages read these exact extracted frames and triangulated frame zero. Side selects `handr/manor` or `handl/manol`, then propagates to GCN/restoration and publication metadata. The person is an explicit CLI/WebUI selection or a verified mapping; source provenance and per-file original hashes are in `provenance/hand-calibration.json`.
+
+FMHR GCN weights and templates are downloaded from a pinned official source with SHA-256 checks (`--component fmhr`). MANO assets remain operator-supplied. See [reproducibility and release blockers](docs/REPRODUCIBILITY.md).

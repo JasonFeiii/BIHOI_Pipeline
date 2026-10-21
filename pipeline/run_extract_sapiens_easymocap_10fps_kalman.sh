@@ -9,7 +9,7 @@
 set -Eeuo pipefail
 
 EASYMOCAP_ROOT="${HOI_PIPELINE_ROOT:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)}"
-DATA_NAME="yeah"
+DATA_NAME=""
 HAND_PRIOR_NAME="sync3"
 HAND_SIDE="right"
 START_SEC="14"
@@ -46,7 +46,7 @@ Usage:
   bash run_extract_sapiens_easymocap_10fps_kalman_multigpu.sh [options]
 
 Main options:
-  --data_name NAME                Dataset under <pipeline-root> (default: yeah)
+  --data_name NAME                Dataset under <pipeline-root> (required)
   --hand_prior_name NAME          Calibrated hand prior/person name (default: sync3)
   --hand_side SIDE                Hand side: left, right, or bimanual (default: right)
   --start_sec SECONDS             Video start time (default: 14)
@@ -187,6 +187,7 @@ is_number "$KALMAN_PREDICTION_CONF" \
 # Match the Kalman state-transition interval to the extracted video FPS.
 KALMAN_DT="$(LC_NUMERIC=C awk -v fps="$FPS" 'BEGIN {printf "%.10f", 1.0 / fps}')"
 
+[[ -n "$DATA_NAME" ]] || { echo "Missing required --data_name" >&2; exit 2; }
 DATA_DIR="${EASYMOCAP_ROOT}/${DATA_NAME}"
 WILOR_DIR="${EASYMOCAP_ROOT}/WiLoR"
 

@@ -109,7 +109,7 @@ def check_inputs(args, p):
     missing = sorted({str(f) for f in required if not f.is_file()})
     if missing:
         raise FileNotFoundError('Missing calibration dependencies:\n' + '\n'.join(missing))
-    manifest = json.loads((ROOT / 'provenance/restricted-wilor.json').read_text())
+    manifest = json.loads((ROOT / 'configs/restricted-wilor.json').read_text())
     import hashlib
     for record in manifest['required_files']:
         f = p['wilor'] / record['path']

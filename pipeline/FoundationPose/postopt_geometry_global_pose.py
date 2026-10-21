@@ -72,9 +72,9 @@ Output
 Example
 -------
 CUDA_VISIBLE_DEVICES=0 python postopt_geometry_global_pose.py \
-    --data_name bowl_0820_ck \
+    --data_name example_sequence \
     --data_root .. \
-    --debug_dir ../bowl_0820_ck/debug_depth \
+    --debug_dir ../example_sequence/debug_depth \
     --depth_scale 1000 \
     --fps 10
 
@@ -938,7 +938,7 @@ def build_parser():
         description="Geometry-aware global object pose optimization after custom FoundationPose",
     )
     # Paths / layout
-    p.add_argument("--data_name", default=None, help="Dataset name, e.g. bowl_0820_ck")
+    p.add_argument("--data_name", default=None, help="Dataset name, e.g. example_sequence")
     p.add_argument("--data_root", default="..", help="Dataset parent; scene=<data_root>/<data_name>")
     p.add_argument("--scene_dir", default=None, help="Explicit scene dir; overrides data_name/data_root")
     p.add_argument("--debug_dir", default=None, help="FoundationPose debug dir; default <scene>/debug_depth")

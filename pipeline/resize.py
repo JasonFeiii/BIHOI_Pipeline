@@ -32,15 +32,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--image_root",
         type=Path,
-        default=Path("yeah/images"),
-        help="Image root, e.g. <data-root>/yeah/images (default: yeah/images).",
+        required=True,
+        help="Image root, e.g. <data-root>/example_sequence/images.",
     )
     parser.add_argument(
         "--mask_root",
         type=Path,
         default=None,
         help=(
-            "Mask root, e.g. <data-root>/yeah/masks. If omitted, this is "
+            "Mask root, e.g. <data-root>/example_sequence/masks. If omitted, this is "
             "inferred as <image_root_parent>/masks."
         ),
     )

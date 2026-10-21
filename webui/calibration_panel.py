@@ -4,7 +4,7 @@ import re
 import subprocess
 from pathlib import Path
 
-from settings import PROJECT_ROOT
+from settings import PROJECT_ROOT, data_root_path
 
 
 def command(data_root, person, dataset, start, end, side, gpus, replace=False, dry_run=False):
@@ -13,7 +13,7 @@ def command(data_root, person, dataset, start, end, side, gpus, replace=False, d
             raise ValueError('Select a valid ' + label + ' folder name')
     if side not in {'left', 'right'}:
         raise ValueError('Choose left or right for this calibration capture')
-    root = Path(data_root).expanduser().resolve()
+    root = data_root_path(data_root)
     target = (root / 'rigid' / person).resolve()
     if root not in target.parents:
         raise ValueError('Person folder escapes the data root')

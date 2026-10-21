@@ -181,3 +181,7 @@ restored_flat_real_scale*
 
 # Also exclude symlinked native builds when reusing an existing installation.
 /pipeline/FoundationPose/mycpp/build
+
+# Local release audits and generated inventories
+/.release-reports/
+/maintainer_notes/
