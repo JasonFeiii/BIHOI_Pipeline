@@ -5495,11 +5495,11 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
 
-    parser.add_argument("--mesh_file", type=str, default=f"../yeah/meshes/compressed.ply")
-    parser.add_argument("--test_scene_dir", type=str, default=f"../yeah")
+    parser.add_argument("--mesh_file", type=str, default=f"../example_sequence/meshes/compressed.ply")
+    parser.add_argument("--test_scene_dir", type=str, default=f"../example_sequence")
     parser.add_argument("--est_refine_iter", type=int, default=5)
     parser.add_argument("--debug", type=int, default=1)
-    parser.add_argument("--debug_dir", type=str, default=f"../yeah/debug_register_best_mask")
+    parser.add_argument("--debug_dir", type=str, default=f"../example_sequence/debug_register_best_mask")
     parser.add_argument("--i_th_cam", type=str, default="1", help="Main camera id used for saved pose/visualization.")
     parser.add_argument(
         "--tracking_cam", "--tracking-cam",

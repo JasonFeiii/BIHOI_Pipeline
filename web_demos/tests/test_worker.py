@@ -13,7 +13,6 @@ except ImportError:
     AVAILABLE = False
 
 from worker import pose_overlay, read_wapr_inputs
-from mose3_points import pixel_points, prepare_preview, load_video_frames
 
 
 @unittest.skipUnless(AVAILABLE, "requires numpy, opencv-python and trimesh in a model environment")
@@ -69,56 +68,6 @@ class InputTests(unittest.TestCase):
         self.assertEqual(overlay.shape, rgb.shape)
         self.assertGreater(np.count_nonzero(overlay[30:51,40:70]), 0)
         self.assertEqual(np.count_nonzero(overlay[:10,:10]), 0)
-
-    def test_click_coordinates_map_to_processed_pixels(self):
-        np.testing.assert_array_equal(pixel_points([[0,0],[.25,.5],[1,1]],168,224),
-                                      [[0,0],[42,112],[167,223]])
-        for points in ([[1.1,0]], [[0,float("nan")]], []):
-            with self.assertRaises(ValueError):
-                pixel_points(points,168,224)
-
-    def test_preview_uses_actual_sampling_and_cropping(self):
-        repo = Path(__file__).resolve().parents[1] / "third_party/MoSE3"
-        if not (repo / "mose3/utils/video_io.py").is_file():
-            self.skipTest("official MoSE3 checkout unavailable")
-        output = Path(self.temp.name)
-        video = output / "sample.avi"
-        writer = cv2.VideoWriter(str(video),cv2.VideoWriter_fourcc(*"MJPG"),10,(100,80))
-        self.assertTrue(writer.isOpened())
-        for i in range(10):
-            writer.write(np.full((80,100,3),i*20,np.uint8))
-        writer.release()
-        manifest=prepare_preview(dict(repo=str(repo),video=str(video),output=str(output),
-                                      num_frames=4,start_frame=1,frame_interval=2,resolution=112,central_crop=True))
-        self.assertEqual(manifest["frame_indices"],[1,3,5,7])
-        self.assertEqual(manifest["width"],manifest["height"])
-        frame=cv2.imread(str(output / "frame_0002.png"))
-        self.assertAlmostEqual(float(frame.mean()),100,delta=3)
-        config = dict(repo=str(repo),video=str(video),output=str(output),num_frames=2,
-                      start_frame=5,frame_interval=3,resolution=112,central_crop=False,sample_all=True)
-        frames, indices, _ = load_video_frames(config)
-        self.assertEqual(indices,list(range(10)))
-        self.assertEqual(len(frames),10)
-        self.assertAlmostEqual(float(frames[0].mean()),0,delta=3)
-        self.assertAlmostEqual(float(frames[-1].mean()),180,delta=3)
-        frames,indices,_=load_video_frames({**config,"sampling_fps":10,"sample_all":False})
-        self.assertEqual(indices,list(range(10)))
-        self.assertEqual(len(frames),10)
-
-    def test_time_sampling_does_not_use_integer_stride(self):
-        repo=Path(__file__).resolve().parents[1]/"third_party/MoSE3"
-        if not (repo/"mose3/utils/video_io.py").is_file():
-            self.skipTest("official MoSE3 checkout unavailable")
-        path=Path(self.temp.name)/"non_integer_rate.avi"
-        writer=cv2.VideoWriter(str(path),cv2.VideoWriter_fourcc(*"MJPG"),25,(100,80))
-        for i in range(25): writer.write(np.full((80,100,3),i*8,np.uint8))
-        writer.release()
-        frames,indices,_=load_video_frames(dict(video=str(path),repo=str(repo),sampling_fps=10,
-                                              central_crop=False,resolution=112))
-        self.assertEqual(len(frames),10)
-        self.assertEqual(indices[0],0)
-        self.assertTrue({2,3}.issubset(set(np.diff(indices))))
-        self.assertLessEqual(abs(indices[-1]/25-.9),.020001)
 
 
 if __name__ == "__main__":

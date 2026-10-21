@@ -15,6 +15,8 @@ from media_config import batch_frame_range,find_sequences,integer,sequence_confi
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT / 'webui'))
+from settings import data_root_path, confined_path
 # run_mv_sam3d_metric_scale.py parameters recorded in meshes/metric_scale_info.json; replayed
 # verbatim so the texture run reproduces the original reconstruction settings.
 RECON_ARGS=['images_dir_name','masks_dir_name','depth_dir_name','intri_name','extri_name','mesh_cam_ids','depth_cam_ids',
@@ -38,7 +40,8 @@ def scheduler(namespace):
 def dataset_path(root, prior, selected):
     if not prior or not re.fullmatch(r'[A-Za-z0-9_.-]+',str(prior)) or prior in ['.','..']:
         raise ValueError('请先选择 Hand prior')
-    base=(Path(root).expanduser().resolve()/'rigid'/str(prior)).resolve()
+    root=data_root_path(root)
+    base=confined_path(root,'rigid',str(prior))
     if not selected:raise ValueError('请选择已完成标准化导出的序列')
     path=(base/str(selected)).resolve()
     if path==base or base not in path.parents or not path.is_dir():raise ValueError('无效的序列路径')
@@ -47,8 +50,8 @@ def dataset_path(root, prior, selected):
 
 def output_root(root,prior,selected):
     """<Data Root>/output_reconstruction/<prior>/<sequence>/ — mirrors rigid/<prior>/<sequence>/."""
-    root=Path(root).expanduser().resolve();data=dataset_path(root,prior,selected)
-    return root/OUTPUT_DIR/str(prior)/data.relative_to((root/'rigid'/str(prior)).resolve())
+    root=data_root_path(root);data=dataset_path(root,prior,selected)
+    return confined_path(root,OUTPUT_DIR,str(prior),data.relative_to(confined_path(root,'rigid',str(prior))))
 
 
 def sequence_choices(root,prior,names):
@@ -67,7 +70,7 @@ def sequence_choices(root,prior,names):
 def all_sequences(root,prior):
     """Every sequence / take under rigid/<prior>/ with a standardized export."""
     if not prior or not re.fullmatch(r'[A-Za-z0-9_.-]+',str(prior)) or prior in ['.','..']:return []
-    return find_sequences(Path(root).expanduser().resolve()/'rigid'/str(prior))
+    return find_sequences(confined_path(data_root_path(root),'rigid',str(prior)))
 
 
 def discover(root,prior,selected,current=None,preferred=None):

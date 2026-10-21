@@ -4,7 +4,7 @@
 set -Eeuo pipefail
 
 EASYMOCAP_ROOT="${HOI_PIPELINE_ROOT:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)}"
-DATA_NAME="mingze"
+DATA_NAME=""
 W="640"
 H="481"
 
@@ -21,7 +21,7 @@ Usage:
 
 Options:
   --data_name NAME      Dataset directory under <pipeline-root>
-                        (default: mingze)
+                        (required)
   --w WIDTH             Target image/mask width
                         (default: 640)
   --h HEIGHT            Target image/mask height
@@ -48,22 +48,22 @@ Examples:
 
   # 1) RGB only + no-force
   bash run_resize_camk_foundationpose_args.sh \
-    --data_name mingze \
+    --data_name participant \
     --use_depth 0 \
     --no_force 1
 
   # 2) RGB + depth + no-force
   bash run_resize_camk_foundationpose_args.sh \
-    --data_name mingze \
+    --data_name participant \
     --use_depth 1 \
-    --depth_dir <pipeline-root>/mingze/depth \
+    --depth_dir <pipeline-root>/participant/depth \
     --no_force 1
 
   # 3) RGB + depth, but do NOT use --no-force
   bash run_resize_camk_foundationpose_args.sh \
-    --data_name mingze \
+    --data_name participant \
     --use_depth 1 \
-    --depth_dir <pipeline-root>/mingze/depth \
+    --depth_dir <pipeline-root>/participant/depth \
     --no_force 0
 USAGE
 }
@@ -118,6 +118,7 @@ done
 [[ "$USE_DEPTH" == "0" || "$USE_DEPTH" == "1" ]] || die "--use_depth must be 0 or 1."
 [[ "$NO_FORCE" == "0" || "$NO_FORCE" == "1" ]] || die "--no_force must be 0 or 1."
 
+[[ -n "$DATA_NAME" ]] || { echo "Missing required --data_name" >&2; exit 2; }
 DATA_DIR="${EASYMOCAP_ROOT}/${DATA_NAME}"
 IMAGE_ROOT="${DATA_DIR}/images"
 MASK_ROOT="${DATA_DIR}/masks"

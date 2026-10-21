@@ -175,9 +175,12 @@ restored_flat_real_scale*
 /web_demos/runtime/
 /web_demos/.venv*/
 /web_demos/.native/
-/web_demos/third_party/MoSE3
 *.engine
 *.plan
 
 # Also exclude symlinked native builds when reusing an existing installation.
 /pipeline/FoundationPose/mycpp/build
+
+# Local release audits and generated inventories
+/.release-reports/
+/maintainer_notes/

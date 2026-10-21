@@ -1,9 +1,6 @@
 """Model adapters. Executed by server.py in the selected model environment."""
 from __future__ import annotations
 
-import gc
-from concurrent.futures import ThreadPoolExecutor
-import importlib.util
 import itertools
 import json
 import os
@@ -22,15 +19,6 @@ def require_cuda(device):
     torch.cuda.set_device(device)
     print(f"GPU: {torch.cuda.get_device_name(device)}", flush=True)
     return torch
-
-
-def load_module(path, name):
-    if not path.is_file():
-        raise FileNotFoundError(f"缺少官方源码 {path}；请先按 README 安装，或指定 --mose3-repo。")
-    spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
 
 
 def read_wapr_inputs(config):
@@ -161,107 +149,15 @@ def run_wapr(config):
     return result
 
 
-def run_mose3(config):
-    import numpy as np
-    repo = Path(config["repo"])
-    sys.path.insert(0, str(repo))
-    inference = load_module(repo / "inference.py", "mose3_demo_inference")
-    torch = require_cuda(config["device"])
-    device = torch.device(config["device"])
-    all_frames = None
-    if config.get("sample_all") or config.get("sampling_fps"):
-        from mose3_points import load_video_frames
-        all_frames, all_indices, original_size = load_video_frames(config)
-        if len(all_frames) < 2 or config["query_idx"] >= len(all_frames):
-            raise ValueError("查询帧超出视频范围，或视频不足两帧")
-        if config.get("point_mode") == "manual" and all_indices != config["frame_indices"]:
-            raise ValueError("完整视频帧与选点预览不一致，请重新生成预览")
-        print(f"按 {config['sampling_fps']:g} FPS 采样，共 {len(all_frames)} 帧。" if config.get("sampling_fps") else f"完整读取 {len(all_frames)} 帧；不跳帧、不截断。",flush=True)
-    print("[1/4] 加载 MoSE3 权重；首次使用 Hugging Face 模型 ID 时会下载", flush=True)
-    started = time.perf_counter()
-    model = inference.MoSE3.from_pretrained(config["checkpoint"], strict=True).to(device).eval()
-    clip = inference.resolve_clip_config({
-        "video_path": config["video"], "output_dir": config["output"],
-        **{key: config[key] for key in ("num_frames", "start_frame", "frame_interval", "query_idx",
-                                       "num_ref_pts", "se3_dist_weight", "se3_sigma_px", "central_crop", "fps")},
-        "max_w": config["resolution"], "max_h": config["resolution"],
-    })
-    if config.get("point_mode") == "manual":
-        clip["frame_indices"] = config["frame_indices"]
-        # The upstream explicit-index loader requires num_frames to be the actual count.
-        clip["num_frames"] = len(config["frame_indices"])
-    print("[2/4] 视频采样、稠密 3D 轨迹预测和逐像素 SE(3) 拟合", flush=True)
-    original_loader = inference.load_video_clip
-    if all_frames is not None:
-        clip.update(num_frames=len(all_frames), start_frame=0, frame_interval=1, frame_indices=all_indices)
-        inference.load_video_clip = lambda *args, **kwargs: (all_frames, all_indices, original_size)
-    try:
-        payload = inference.run_clip(model, clip, device)
-    finally:
-        inference.load_video_clip = original_loader
-    del all_frames
-    inference_seconds = time.perf_counter() - started
-    frames, height, width = payload["images"].shape[:3]
-    result = {"model": "MoSE3", "frames": frames, "width": width, "height": height,
-              "query_idx": int(payload["query_idx"]), "frame_indices": clip.get("frame_indices", []),
-              "sample_all": bool(config.get("sample_all")),
-              "sampling_fps": config.get("sampling_fps"),
-              "coordinate_frame": "first camera frame", "quaternion_order": "wxyz",
-              "scale_note": "单目预测尺度；不保证米制尺度",
-              "visible_fraction": float(np.mean(payload["visibility"] > 0)),
-              "valid_se3_fraction": float(np.mean(payload["se3_valid"])),
-              "inference_seconds_including_setup": round(inference_seconds, 3)}
-    del model
-    gc.collect()
-    torch.cuda.empty_cache()
-    result.update(export_mose3(config, clip, payload))
-    return result
-
-
-def export_mose3(config, clip, payload):
-    """Export once from CPU memory, overlapping lossless compression and rendering."""
-    from mose3_export import save_predictions, save_video
-    from mose3_points import render_selected_points
-    output = Path(config["output"])
-    started = time.perf_counter()
-    (output / "config.json").write_text(json.dumps(clip, indent=2))
-    print("[3/4] 无损保存完整 predictions.npz，同时准备视频", flush=True)
-    result = {"point_mode": config.get("point_mode", "grid")}
-    with ThreadPoolExecutor(max_workers=1) as pool:
-        saved = pool.submit(save_predictions, output / "predictions.npz", payload)
-        save_video(output / "video.mp4", payload["images"], clip["fps"], quality=8)
-        print("[4/4] 复用内存预测，使用官方绘制函数生成结果视频", flush=True)
-        render_started = time.perf_counter()
-        selection = render_selected_points({**config, "fps":clip["fps"]}, payload, clip.get("frame_indices"))
-        result["visualization_seconds"] = round(time.perf_counter() - render_started, 3)
-        if selection is not None:
-            result.update(query_points_xy=selection["pixel_xy"], source_query_frame=selection["source_query_frame"],
-                          selected_point_count=len(selection["pixel_xy"]))
-        if not saved.done():
-            print("  视频已生成，正在完成完整预测数据的无损保存。", flush=True)
-        result["prediction_save_seconds"] = round(saved.result(), 3)
-    for name in ("tracks.mp4", "se3.mp4", "rigidity.mp4", "query_points.png"):
-        if not (output / name).is_file():
-            raise RuntimeError(f"官方可视化未生成 {name}")
-    from video_timing import align_result_videos
-    result.update(align_result_videos(config, len(payload["images"])))
-    result["export_seconds"] = round(time.perf_counter() - started, 3)
-    print(f"  结果导出完成（{result['export_seconds']:.1f} 秒），视频时长已校验。", flush=True)
-    return result
-
-
 def main():
-    if len(sys.argv) > 1 and sys.argv[1] == "--preview":
-        from mose3_points import prepare_preview
-        prepare_preview(json.loads(Path(sys.argv[2]).read_text()))
-        return
     config = json.loads(Path(sys.argv[1]).read_text())
     output = Path(config["output"])
-    result = (run_wapr if config["app"] == "wapr" else run_mose3)(config)
+    if config["app"] != "wapr":
+        raise ValueError("Unsupported demo")
+    result = run_wapr(config)
     (output / "result.json").write_text(json.dumps(result, indent=2, ensure_ascii=False, allow_nan=False), encoding="utf-8")
-    if config["app"] == "wapr":
-        from result_archive import build_result_archive
-        build_result_archive(output)
+    from result_archive import build_result_archive
+    build_result_archive(output)
     print("完成：全部结果已保存，可在页面预览和下载。", flush=True)
 
 

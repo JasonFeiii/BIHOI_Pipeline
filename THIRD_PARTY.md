@@ -4,7 +4,7 @@ Licenses were read from the local repositories and checked against official upst
 
 | Component | Source handling | Observed upstream/snapshot | License evidence |
 | --- | --- | --- | --- |
-| EasyMocap | Local package and MANO fitting modifications vendored | Original root has invalid/empty `.git`; per-file original hashes in provenance | `licenses/EasyMocap.txt`: noncommercial educational/research/nonprofit use; modified code must remain available |
+| EasyMocap | Local package and MANO fitting modifications vendored | Original EasyMocap snapshot; see retained notices | `licenses/EasyMocap.txt`: noncommercial educational/research/nonprofit use; modified code must remain available |
 | SAM3 | Package and the two active local entrypoints vendored | `660a5e9e1b8b4c02c0ad97229b88a09a6e4ff5b7` | `licenses/SAM3.txt`; custom SAM license. The upstream metadata's MIT classifier does not override this text |
 | SAM2 | SAM2 package/configs vendored; CUDA postprocessing disabled by active stage | `2b90b9f5ceec907a1c18123530e92e794ad901a4` | `licenses/SAM2.txt`, Apache-2.0 |
 | Depth Anything 3 | Inference package and multiview script vendored | `3d835ec1a5802d64a8b8b15f817a1ab54809bfe4` | `licenses/Depth-Anything-3.txt`, Apache-2.0 code; selected giant model has CC-BY-NC-4.0 weights |
@@ -20,13 +20,13 @@ The local `WiLoR/demo_fast.py` is required by the working hand stage but is an a
 
 The HO-Cap install mechanism uses its actual upstream loss; it has no approximate replacement. External installation does not remove applicable AGPL obligations. Review combined distribution/service use before publishing a public service.
 
-Model download revisions were read from official Hugging Face metadata without downloading checkpoints. Their separate source/model terms must be accepted by the operator. Source snapshot hashes describe local modifications; an upstream Git revision alone does not reproduce the customized source.
+Model downloads use pinned upstream revisions. Their separate source/model terms must be accepted by the operator. An upstream Git revision alone does not reproduce unpublished customized source.
 
 ## Hand Calibration additions
 
 FMHR's calibration source/import closure retains its Apache-2.0 license in `pipeline/FMHR/LICENSE` and `licenses/FMHR.txt`; the work is Fine-Grained Multi-View Hand Reconstruction Using Inverse Rendering by Qijun Gan, Wentong Li, Jinwei Ren and Jianke Zhu ([official repository](https://github.com/agnJason/FMHR)). Modified files identify packaging changes; the estimator's numerical routines are preserved. `models/mesh_sampling.py` attributes its CoMA-derived code; the complete [CoMA license](https://github.com/anuragranj/coma/blob/master/LICENSE) is preserved in `licenses/CoMA.txt`. EasyMocap calibration code retains its existing noncommercial terms.
 
-The adapted `WiLoR/demo.py` is not distributed under its no-derivatives terms. Only its hash is published; the operator's licensed local import now verifies 27 required source/config files. `psbody-mesh` is an external dependency, with its [research-use terms](https://github.com/MPI-IS/mesh/blob/49e70425cf373ec5269917012bda2944215c5ccd/LICENSE.txt) in `licenses/psbody-mesh.txt`; its source/binaries are not copied into this repository. FMHR GCN checkpoints, template meshes, MANO files and per-person beta parameters are operator-supplied private assets, never published.
+The adapted `WiLoR/demo.py` is not distributed under its no-derivatives terms. Only its hash is published; the operator's licensed local import now verifies 27 required source/config files. `psbody-mesh` is an external dependency, with its [research-use terms](https://github.com/MPI-IS/mesh/blob/49e70425cf373ec5269917012bda2944215c5ccd/LICENSE.txt) in `licenses/psbody-mesh.txt`; its source/binaries are not copied into this repository. FMHR GCN checkpoints and template meshes have public upstream downloads, pinned in `configs/models/manifest.json`; MANO files and per-person beta parameters remain operator-supplied.
 
 ## V2 WAPR and standalone demos
 
@@ -41,5 +41,6 @@ Bundled WAPR fonts retain DejaVu and WenQuanYi notices under `wapr/fonts/`.
 The standalone demo's Noto Sans SC subset retains `web_demos/static/fonts/OFL.txt`.
 These display assets are explicitly hashed in `configs/source-assets.json`.
 
-MoSE3 source and weights are external, not vendored. Its optional demo uses the
-revision documented in `web_demos/README.md`; consult upstream source/weight terms.
+## Integration license boundary
+
+A parent repository license does not replace any third-party license in this tree. The project-owned integration code still needs an explicit license decision. HO-Cap AGPL and FoundationPose/EasyMocap noncommercial terms need compatibility review for the combined Final workflow; external installation is not a compatibility resolution. See `docs/REPRODUCIBILITY.md`.

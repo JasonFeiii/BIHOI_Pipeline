@@ -26,15 +26,19 @@ def module(path):
 
 
 class CalibrationTests(unittest.TestCase):
+    def setUp(self):
+        scope = patch.dict(os.environ, {'HOI_ALLOWED_DATA_ROOTS': tempfile.gettempdir()})
+        scope.start()
+        self.addCleanup(scope.stop)
     def args(self, *extra):
-        return calibration.parser().parse_args(['--data_name', 'hands_ck', '--start_sec', '0',
-            '--end_sec', '0.1', '--hand_side', 'right', *extra])
+        return calibration.parser().parse_args(['--data_name', 'calibration_capture', '--start_sec', '0',
+            '--end_sec', '0.1', '--hand_side', 'right', '--person_name', 'participant', *extra])
 
     def test_reference_mapping_and_exact_interval(self):
         p = calibration.plan(self.args(), 'test')
-        self.assertEqual(p['person'], 'ck')
+        self.assertEqual(p['person'], 'participant')
         self.assertEqual(p['frames'], 1)
-        self.assertEqual(p['target'].parts[-4:], ('rigid', 'ck', 'calib', 'restored_flat_real_scale.pt'))
+        self.assertEqual(p['target'].parts[-4:], ('rigid', 'participant', 'calib', 'restored_flat_real_scale.pt'))
         renamer = p['commands'][0][2]
         self.assertIn('--strict-calibration', renamer)
         self.assertEqual(Path(renamer[1]).name, 'rename_videos_31cams.py')
@@ -51,7 +55,7 @@ class CalibrationTests(unittest.TestCase):
             self.assertEqual(tri[tri.index('--body') + 1], body)
             self.assertEqual(tri[tri.index('--model') + 1], model)
             for cmd in [gcn, restore]:
-                self.assertEqual(cmd[cmd.index('--name') + 1], 'hands_ck')
+                self.assertEqual(cmd[cmd.index('--name') + 1], 'calibration_capture')
                 self.assertEqual(cmd[cmd.index('--hand_side') + 1], side)
             self.assertEqual(restore[restore.index('--real-kpts-json') + 1], str(p['work_data'] / f'output/{model}/keypoints3d/000000.json'))
             self.assertEqual(publication[publication.index('--person-name') + 1], 'another_person')
@@ -59,7 +63,7 @@ class CalibrationTests(unittest.TestCase):
 
     def test_unmapped_capture_requires_explicit_person(self):
         with self.assertRaisesRegex(ValueError, 'No verified person mapping'):
-            calibration.plan(self.args('--data_name', 'unknown_capture'))
+            calibration.plan(self.args('--data_name', 'unknown_capture', '--person_name', ''))
         self.assertEqual(calibration.plan(self.args('--data_name', 'unknown_capture', '--person_name', 'collector'))['person'], 'collector')
 
     def test_invalid_interval_and_non10fps_rejected(self):
@@ -71,7 +75,7 @@ class CalibrationTests(unittest.TestCase):
     def test_symlink_escape_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / 'root'; root.mkdir()
-            (root / 'hands_ck').symlink_to(Path(directory), target_is_directory=True)
+            (root / 'calibration_capture').symlink_to(Path(directory), target_is_directory=True)
             with self.assertRaises(ValueError):
                 calibration.plan(self.args('--calibration-root', str(root)))
 
@@ -87,7 +91,7 @@ class CalibrationTests(unittest.TestCase):
         self.assertEqual(len(order), 31)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            source = root / 'input/hands_ck'; (source / 'videos').mkdir(parents=True)
+            source = root / 'input/calibration_capture'; (source / 'videos').mkdir(parents=True)
             for camera in reversed(order):
                 (source / 'videos' / (camera + '.mp4')).write_bytes(camera.encode())
             for filename in ['intri.yml', 'extri.yml']:
@@ -208,7 +212,7 @@ class CalibrationTests(unittest.TestCase):
     def test_webui_preview_runs_launcher_without_inference(self):
         # A real shell/Python round trip, rather than merely checking command text.
         with patch.dict(os.environ, {'HOI_ENV_EASYMOCAP': str(Path(sys.executable).resolve().parents[1])}):
-            results = list(calibration_panel.run('/tmp/calibration preview', 'ck', 'hands_ck', 0, 0.1, 'right', '0', False, True))
+            results = list(calibration_panel.run('/tmp/calibration preview', 'participant', 'calibration_capture', 0, 0.1, 'right', '0', False, True))
         self.assertEqual(results[-1][0], 'Calibration plan ready.')
         self.assertIn('1 frame(s)/camera', results[-1][1])
         self.assertIn('real-scale MANO beta fitting', results[-1][1])

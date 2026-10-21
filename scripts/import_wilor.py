@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--source',type=Path,required=True);a=p.parse_args()
- manifest=json.loads((ROOT/'provenance/restricted-wilor.json').read_text());source=a.source.expanduser().resolve()
+ manifest=json.loads((ROOT/'configs/restricted-wilor.json').read_text());source=a.source.expanduser().resolve()
  dest=Path(os.environ.get('HOI_EXTERNAL_ROOT',ROOT/'.external'))/'WiLoR'
  # Validate everything before copying anything. Extra files/weights/.git are never copied.
  for rec in manifest['required_files']:

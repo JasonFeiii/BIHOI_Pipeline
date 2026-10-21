@@ -1,21 +1,14 @@
-# V2 publication scope
+# Security policy
 
-This is a new private source repository based on v1 at `3c7c9ea`, with the current
-local 6D tracking and WebUI modifications. It starts with a clean source snapshot;
-v1 history and the measured calibration files uploaded there are not republished.
-The original repository is unchanged.
+Report vulnerabilities privately to the repository maintainers. Use GitHub private vulnerability reporting when enabled. Do not post passwords, tokens, private captures or calibration files in public issues. Security fixes target the current main branch.
 
-The publication audit checks the exact Git index for runtime data, model weights,
-private configuration, secret patterns, unexpected binary files, symlinks,
-submodules and unresolved conflicts. Source files over 5 MiB fail unless explicitly
-allowlisted as a licensed display asset. Four bundled font files are SHA-256
-allowlisted in `configs/source-assets.json`; the existing SAM3 tokenizer is retained.
+## Deployment boundaries
 
-Model caches, videos, meshes, measured camera calibration, native build products,
-external MoSE3/WiLoR installations, job logs and local environments are ignored.
-Tests may use ignored links to operator-supplied assets; these links are not part
-of a Git clone. `.env.example` contains only configuration examples.
+- Bind to localhost by default. Network access requires authentication; do not expose the research WebUI directly to the Internet.
+- Set `WEBUI_PASSWORD` through the environment or an ignored local `.env`. Configured and generated passwords are never printed. Generated credentials use owner-only runtime files.
+- Configure `HOI_DATA_ROOT` and optional `HOI_ALLOWED_DATA_ROOTS` before launch. Browser inputs must stay within those roots after symlink resolution.
+- Exports use fresh directories under the selected data root's `exports/`, or explicit `HOI_ALLOWED_EXPORT_ROOTS`. Export does not delete existing destination files.
+- File deletion is a separate authenticated action requiring `DELETE`. Give the server account access only to necessary data.
+- Obtain model files and native extensions from trusted sources. Serialized model formats can contain executable code.
 
-See `docs/upload-manifest.tsv` for published paths and hashes, `THIRD_PARTY.md`
-for source/model terms, and `docs/VALIDATION_V2.md` for validation scope. Pattern
-scanning is not a guarantee against every possible secret representation.
+These checks limit browser access; they do not isolate mutually untrusted users sharing an operating-system account. Use separate accounts or containers for that deployment.

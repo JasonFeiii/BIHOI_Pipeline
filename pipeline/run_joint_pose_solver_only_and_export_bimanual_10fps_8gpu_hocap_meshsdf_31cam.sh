@@ -11,7 +11,7 @@
 set -Eeuo pipefail
 
 EASYMOCAP_ROOT="${HOI_PIPELINE_ROOT:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)}"
-DATA_NAME="yeah"
+DATA_NAME=""
 DAI_HAND_SIDE="bimanual"
 GPU_IDS="auto"
 MIN_FREE_VRAM_MB="49152"
@@ -39,7 +39,7 @@ Options:
 
 Example:
   bash run_joint_pose_solver_only_and_export_bimanual_10fps_8gpu.sh \
-    --data_name bowl_0820_ck \
+    --data_name example_sequence \
     --hand bimanual \
     --gpus auto
 USAGE
@@ -110,6 +110,7 @@ else
   GPU_SELECTION_MODE="manual"
 fi
 
+[[ -n "$DATA_NAME" ]] || { echo "Missing required --data_name" >&2; exit 2; }
 DATA_DIR="${EASYMOCAP_ROOT}/${DATA_NAME}"
 FOUNDATIONPOSE_DIR="${EASYMOCAP_ROOT}/FoundationPose"
 SOLVER_SCRIPT="${FOUNDATIONPOSE_DIR}/render_object_both_hands_joint_pose_solver_only_10fps_8gpu_hocap_meshsdf_31cam.py"

@@ -5,6 +5,7 @@ import json
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import numpy as np
@@ -13,6 +14,8 @@ from web_panel import all_sequences,batch_frame_range,build_config,dataset_path,
 class WebPanelTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name)
+        scope=patch.dict(os.environ,{'HOI_DATA_ROOT':str(self.root)})
+        scope.start();self.addCleanup(scope.stop)
         data=self.root/'rigid/test/sequence';export=data/'standardized_hoi_30fps';export.mkdir(parents=True)
         (export/'metadata.json').write_text(json.dumps({'resampled':False}))
         np.save(export/'source_frame_ids.npy',np.array([0,1,2,3]))

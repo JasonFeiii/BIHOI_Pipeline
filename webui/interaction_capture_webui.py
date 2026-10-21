@@ -11,6 +11,7 @@ import signal
 import subprocess
 import sys
 import time
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple
@@ -18,9 +19,9 @@ from typing import Dict, List, Optional, Sequence, Tuple
 import gradio as gr
 
 try:
-    from .settings import PIPELINE_ROOT, PROJECT_ROOT, CALIBRATION_DIR, MODEL_ROOT, environment, python_for
+    from .settings import PIPELINE_ROOT, PROJECT_ROOT, CALIBRATION_DIR, MODEL_ROOT, environment, python_for, confined_path, data_root_path, export_root_path, allowed_data_roots
 except ImportError:
-    from settings import PIPELINE_ROOT, PROJECT_ROOT, CALIBRATION_DIR, MODEL_ROOT, environment, python_for
+    from settings import PIPELINE_ROOT, PROJECT_ROOT, CALIBRATION_DIR, MODEL_ROOT, environment, python_for, confined_path, data_root_path, export_root_path, allowed_data_roots
 
 # Support both direct execution and importing the WebUI as a namespace package.
 try:
@@ -145,7 +146,7 @@ def _q(x) -> str:
 
 
 def _data_root_path(root_str: str) -> Path:
-    return Path(os.path.expanduser(str(root_str))).resolve()
+    return data_root_path(str(root_str))
 
 
 def _ensure_pipeline_data_name(data_root: Path, job: Job, root: Path = EASYMOCAP_ROOT) -> str:
@@ -180,14 +181,14 @@ def _ensure_pipeline_data_name(data_root: Path, job: Job, root: Path = EASYMOCAP
 
 
 def _prior_root(root: Path, hand_prior_name: str) -> Path:
-    return root / DATA_KIND / hand_prior_name
+    return confined_path(root, DATA_KIND, _validate_name(hand_prior_name, 'hand_prior_name'))
 
 
 def _ensure_pipeline_prior_name(data_root: Path, job: Job) -> str:
     """Return a hand-prior path usable by EasyMocap-side scripts.
 
     If the data root is inside EASYMOCAP_ROOT, return the normal relative path
-    such as ``rigid/ck``. Otherwise reuse the same .webui_data_roots symlink
+    such as ``rigid/participant``. Otherwise reuse the same .webui_data_roots symlink
     strategy as _ensure_pipeline_data_name(), so scripts that resolve the hand
     prior relative to EasyMocap can still find calib/restored_flat_real_scale.pt.
     """
@@ -217,12 +218,12 @@ def _ensure_pipeline_prior_name(data_root: Path, job: Job) -> str:
 
 def _dataset_folder(root: Path, job: Job) -> Path:
     """The dataset folder (shared by all takes)."""
-    return root / DATA_KIND / job.hand_prior_name / job.dataset
+    return confined_path(root, DATA_KIND, _validate_name(job.hand_prior_name, 'hand_prior_name'), _validate_name(job.dataset, 'dataset'))
 
 
 def _take_root(ds_folder: Path, take: str) -> Path:
     """Working folder of one take: the dataset folder for take01, <ds>/takes/<take>/ otherwise."""
-    return ds_folder if take == PRIMARY_TAKE else ds_folder / TAKES_SUBDIR / take
+    return ds_folder if take == PRIMARY_TAKE else confined_path(ds_folder, TAKES_SUBDIR, _validate_name(take, 'take'))
 
 
 def _dataset_root(root: Path, job: Job) -> Path:
@@ -258,7 +259,7 @@ def _dataset_takes(ds_folder: Path) -> List[str]:
 
 def _take_video_dir(root: Path, job: Job) -> Path:
     """Raw videos of this take (always under the dataset folder, never under takes/)."""
-    return _dataset_folder(root, job) / "videos" / job.take
+    return confined_path(_dataset_folder(root, job), 'videos', _validate_name(job.take, 'take'))
 
 
 def _ensure_link(link: Path, target: Path) -> Optional[str]:
@@ -928,7 +929,7 @@ def _safe_dataset_base(root_str: str, hand_prior_name: str, dataset: str) -> Pat
     root = _data_root_path(root_str)
     hp = _validate_name(str(hand_prior_name or ""), "hand_prior_name")
     ds = _validate_name(str(dataset or ""), "dataset")
-    base = (root / DATA_KIND / hp / ds).resolve()
+    base = confined_path(root, DATA_KIND, hp, ds)
     if not base.is_dir():
         raise ValueError(f"Dataset directory does not exist: {base}")
     return base
@@ -1084,7 +1085,7 @@ EXPORT_ZIP_STORED_EXTS = {".mp4", ".npz", ".zip", ".png", ".jpg"}
 
 def _default_export_dir(root_str: str, hand_prior_name: str) -> Path:
     hp = _validate_name(str(hand_prior_name or ""), "hand_prior_name")
-    return _data_root_path(root_str) / "exports" / hp
+    return confined_path(_data_root_path(root_str), 'exports', hp)
 
 
 def _resolve_export_dir(root_str: str, hand_prior_name: str, export_dir: str) -> Path:
@@ -1094,14 +1095,16 @@ def _resolve_export_dir(root_str: str, hand_prior_name: str, export_dir: str) ->
     out = Path(os.path.expanduser(text))
     if not out.is_absolute():
         out = _data_root_path(root_str) / out
-    return out.resolve()
+    return export_root_path(root_str, out)
 
 
 def _export_targets(base: Path) -> Tuple[List[Path], Optional[Path]]:
     """Return (mp4 files under outputmano/, standardized_hoi_30fps dir or None)."""
-    outputmano = base / "outputmano"
+    outputmano = confined_path(base, 'outputmano')
     mp4s = sorted(p for p in outputmano.rglob("*.mp4") if p.is_file()) if outputmano.is_dir() else []
-    std = base / EXPORT_STANDARD_DIR
+    for p in mp4s:
+        confined_path(base, p)
+    std = confined_path(base, EXPORT_STANDARD_DIR)
     return mp4s, (std if std.is_dir() else None)
 
 
@@ -1119,21 +1122,16 @@ def _copy_if_changed(src: Path, dst: Path) -> bool:
 
 
 def _copy_tree_if_changed(src: Path, dst: Path) -> Tuple[int, int]:
-    """Mirror src into dst (stale files in dst are removed). Returns (files_total, files_copied)."""
+    """Copy an export tree without deleting unrelated destination files."""
     total = copied = 0
-    keep = set()
     for p in sorted(src.rglob("*")):
         if not p.is_file():
             continue
+        confined_path(src, p)
         rel = p.relative_to(src)
-        keep.add(rel)
         total += 1
-        if _copy_if_changed(p, dst / rel):
+        if _copy_if_changed(p, confined_path(dst, rel)):
             copied += 1
-    if dst.is_dir():
-        for p in sorted(dst.rglob("*")):
-            if p.is_file() and p.relative_to(dst) not in keep:
-                p.unlink()
     return total, copied
 
 
@@ -1156,6 +1154,10 @@ def export_datasets(root_str, hand_prior_name, selected_datasets, export_dir, ma
         if not names:
             raise ValueError("Select at least one dataset to export.")
         out_root = _resolve_export_dir(root_str, hp, export_dir)
+        # Each request owns a fresh folder: no overwrite, stale-file cleanup,
+        # or accidental ZIP inclusion of files from a previous export.
+        out_root.mkdir(parents=True, exist_ok=True)
+        out_root = Path(tempfile.mkdtemp(prefix='hoi_export_', dir=out_root))
 
         busy = set()
         for m in _active_runs():
@@ -1174,9 +1176,9 @@ def export_datasets(root_str, hand_prior_name, selected_datasets, export_dir, ma
             for take in _dataset_takes(ds_base):
                 troot = _take_root(ds_base, take)
                 if take == PRIMARY_TAKE:
-                    targets.append((ds, troot, out_root / ds))
+                    targets.append((ds, troot, confined_path(out_root, ds)))
                 elif troot.is_dir():
-                    targets.append((f"{ds}/{take}", troot, out_root / ds / TAKES_SUBDIR / take))
+                    targets.append((f"{ds}/{take}", troot, confined_path(out_root, ds, TAKES_SUBDIR, take)))
         for ds, base, dst in targets:
             mp4s, std = _export_targets(base)
             if not mp4s and std is None:
@@ -1445,7 +1447,7 @@ def _preprocess_steps(
         Step(
             "Resize + prepare image folders",
             code_root,
-            f"python prepare_bowl_0820_ck_ffmpeg_fast.py "
+            f"python prepare_dataset_ffmpeg_fast.py "
             f"--data-name {_q(data_name)} "
             f"--calib-dir {_q(CALIBRATION_DIR)} "
             f"--width {int(width)} "
@@ -1733,7 +1735,7 @@ def _final_steps(
     #   <pipeline-root>/
     #
     # Example:
-    #   rigid/ck/cup3_0820_ck
+    #   rigid/participant/sequence
     # ------------------------------------------------------------------
     data_name = _ensure_pipeline_data_name(
         data_root,
@@ -1775,7 +1777,7 @@ def _final_steps(
     # ------------------------------------------------------------------
     # Final CPU video encoding.
     #
-    # H200 does not provide NVENC, so use libx264 directly.
+    # CPU encoding also works on GPUs without NVENC.
     #
     # ultrafast:
     #   much faster than veryfast
@@ -1846,6 +1848,7 @@ def _final_steps(
                 "export_standardized_mano_object_table_"
                 "4rings_first500.py "
                 f"--data_name {_q(data_name)} "
+                f"--input_fps {float(fps)} --output_fps 30 "
                 f"--max_frames {int(max_frames)} "
                 "--overwrite"
             ),
@@ -3255,7 +3258,7 @@ def make_ui(default_data_root: str):
                 choices=[],
                 value=None,
                 label="Hand prior name",
-                info="Folders directly under rigid/, e.g. ck",
+                info="Folders directly under rigid/, e.g. participant",
                 scale=4,
             )
             hand_side = gr.Dropdown(
@@ -3273,7 +3276,7 @@ def make_ui(default_data_root: str):
                         "in a temporary workspace before frame extraction; originals are unchanged. "
                         "The requested interval is extracted at **10 FPS**. This action is never part of the normal processing chain.")
             with gr.Row():
-                calibration_dataset = gr.Textbox(value="hands_ck", label="Calibration capture name")
+                calibration_dataset = gr.Textbox(value="calibration_capture", label="Calibration capture name")
                 calibration_side = gr.Dropdown(choices=["right", "left"], value="right", label="Calibration hand")
                 calibration_gpus = gr.Textbox(value=DEFAULT_ALLOWED_GPUS, label="Calibration GPUs (physical IDs or auto)")
             with gr.Row():
@@ -3935,7 +3938,7 @@ def make_ui(default_data_root: str):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--data-root", default=os.getenv("HOI_DATA_ROOT", str(EASYMOCAP_ROOT)), help="Directory that contains rigid/")
+    p.add_argument("--data-root", default=os.getenv("HOI_DATA_ROOT", str(PROJECT_ROOT / 'data')), help="Trusted directory that contains rigid/")
     p.add_argument("--host", default=os.getenv("WEBUI_HOST", "127.0.0.1"))
     p.add_argument("--port", type=int, default=7860)
     p.add_argument("--share", action="store_true", help="Ask Gradio to create a public tunnel URL")
@@ -3948,17 +3951,23 @@ def main():
     if args.run_dir:
         sys.exit(_run_worker(Path(args.run_dir)))
 
+    # A command-line option is administrator configuration; the browser textbox
+    # cannot expand this allowlist. Child workers inherit the same configuration.
+    os.environ['HOI_DATA_ROOT'] = str(Path(args.data_root).expanduser().resolve())
+
     if args.no_auth and (args.share or args.host not in ("127.0.0.1", "localhost", "::1")):
         p.error("Public access requires authentication; remove --no-auth.")
 
     auth = None
     if not args.no_auth:
-        password = args.auth_password or secrets.token_urlsafe(12)
+        password, password_file = _login_password(args.auth_password)
         auth = (args.auth_user, password)
         print("\n[webui] Login credentials")
         print(f"[webui] username: {args.auth_user}")
-        print(f"[webui] password: {password}")
-        print("[webui] Set WEBUI_PASSWORD to keep a stable password across restarts.\n")
+        if password_file:
+            print(f"[webui] Generated password saved to owner-only file: {password_file}")
+        else:
+            print("[webui] Using the configured password; its value is not logged.")
 
     demo = make_ui(args.data_root)
     demo.queue(default_concurrency_limit=4)
@@ -3969,8 +3978,21 @@ def main():
         auth=auth,
         show_error=True,
         css=getattr(demo, "_hoi_css", None),
-        allowed_paths=[str(_data_root_path(args.data_root)), str(RUNS_DIR), *[str(Path(p).expanduser().resolve()) for p in os.getenv("HOI_ALLOWED_DATA_ROOTS", "").split(os.pathsep) if p]],
+        allowed_paths=[*map(str, allowed_data_roots()), str(RUNS_DIR), *[str(Path(p).expanduser().resolve()) for p in os.getenv("HOI_ALLOWED_EXPORT_ROOTS", "").split(os.pathsep) if p]],
+        blocked_paths=[str(p.resolve()) for p in RUNS_DIR.glob('login-*.secret')],
     )
+
+
+def _login_password(configured):
+    """Never print a secret, including an automatically generated one."""
+    if configured:
+        return configured, None
+    RUNS_DIR.mkdir(parents=True, exist_ok=True)
+    password = secrets.token_urlsafe(24)
+    fd, filename = tempfile.mkstemp(prefix='login-', suffix='.secret', dir=RUNS_DIR)
+    with os.fdopen(fd, 'w') as stream:
+        stream.write(password + '\n')
+    return password, Path(filename)
 
 
 if __name__ == "__main__":

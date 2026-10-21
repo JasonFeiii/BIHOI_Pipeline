@@ -25,7 +25,7 @@ Expected dataset layout:
 
 Run from the MV-SAM3D repository root, e.g.
     CUDA_VISIBLE_DEVICES=0 python run_mv_sam3d_metric_scale.py \
-        --setting_name bowl_0820_ck
+        --setting_name example_sequence
 
 Notes
 -----
