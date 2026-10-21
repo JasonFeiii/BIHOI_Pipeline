@@ -175,7 +175,6 @@ restored_flat_real_scale*
 /web_demos/runtime/
 /web_demos/.venv*/
 /web_demos/.native/
-/web_demos/third_party/MoSE3
 *.engine
 *.plan
 

@@ -41,9 +41,6 @@ Bundled WAPR fonts retain DejaVu and WenQuanYi notices under `wapr/fonts/`.
 The standalone demo's Noto Sans SC subset retains `web_demos/static/fonts/OFL.txt`.
 These display assets are explicitly hashed in `configs/source-assets.json`.
 
-MoSE3 source and weights are external, not vendored. Its optional demo uses the
-revision documented in `web_demos/README.md`; consult upstream source/weight terms.
-
 ## Integration license boundary
 
 A parent repository license does not replace any third-party license in this tree. The project-owned integration code still needs an explicit license decision. HO-Cap AGPL and FoundationPose/EasyMocap noncommercial terms need compatibility review for the combined Final workflow; external installation is not a compatibility resolution. See `docs/REPRODUCIBILITY.md`.

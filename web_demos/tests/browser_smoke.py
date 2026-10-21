@@ -23,15 +23,8 @@ def main():
         page.wait_for_selector("#backend")
         page.locator("#backend").select_option("trt")
         page.locator("#fx").fill("600")
-        page.screenshot(path="/tmp/pose-demo-wapr.png", full_page=True)
-        page.locator('[data-app="mose3"]').click()
-        page.wait_for_selector("#resolution")
-        assert page.locator('[name="sampling_fps"]').input_value() == "10"
-        assert page.locator('[name="fps"]').input_value() == "10"
-        assert page.title() == "MoSE3 · Pose Lab"
-        page.locator("#run").click()
-        assert "请先上传视频" in page.locator("#notice").inner_text()
-        page.locator('[data-app="wapr"]').click()
+        page.screenshot(path=str(Path(directory) / "pose-demo-wapr.png"), full_page=True)
+        assert page.title() == "WAPR · Pose Lab"
         assert page.locator("#backend").input_value() == "trt"
         assert page.locator("#fx").input_value() == "600"
         page.locator('[name="region"][value="mask"]').check()
@@ -57,11 +50,9 @@ def main():
             assert page.locator('[name="region"][value="mask"]').is_checked()
             assert page.locator("#depth_scale").input_value() == "1"
             assert page.locator("#rgb-canvas").is_visible()
-        page.locator('[data-app="mose3"]').click()
-        page.screenshot(path="/tmp/pose-demo-mose3.png", full_page=True)
         page.set_viewport_size({"width": 390, "height": 844})
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
-        page.screenshot(path="/tmp/pose-demo-mobile.png", full_page=True)
+        page.screenshot(path=str(Path(directory) / "pose-demo-mobile.png"), full_page=True)
         assert not errors, errors
         browser.close()
         print("Browser smoke checks passed: navigation, forms, validation, reset, mobile layout, no JS errors.")

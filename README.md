@@ -12,7 +12,7 @@ V2 integrates the current **FoundationPose / WAPR 6D object tracking** and live 
 - Tracking: compare **WAPR(C), SAPR(C), SAPR(WAPR(C))** across views.
 - No consensus: best mask + triangulated XYZ, **96 rotation hypotheses → WAPR → SAPR → WBPS**.
 - Live preview: prominent green pose mesh and sparse red depth points at **35% opacity**. Full-sequence processing and result playback use the prepared 10 FPS timeline.
-- Standalone [WAPR / MoSE3 demos](web_demos/README.md), including manual frame-click query points and faster result export.
+- Standalone [WAPR demo](web_demos/README.md) for RGB-D object pose estimation and result export.
 
 See [6D tracking behavior and setup](docs/POSE_TRACKING_V2.md) and [reproducibility status](docs/REPRODUCIBILITY.md). Models, videos, measured calibration and runtime outputs are supplied separately.
 
