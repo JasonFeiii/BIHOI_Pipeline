@@ -87,4 +87,14 @@ bash scripts/run_webui.sh
 2. 设置 **10 FPS、640×360**，按顺序运行预处理、重建、物体跟踪、Hands、Final。
 3. 在页面查看或导出结果；标准化结果位于序列目录的 `standardized_hoi_30fps/`，按 30 FPS 导出并保留原时长。
 
+## 5. 机器人重定向与物理优化（可选）
+
+`standardized_hoi_30fps/` 导出后，可重定向到双 Sharpa 手并在双 UR3e + Sharpa 场景中做物理优化，见 [robot/README.md](robot/README.md)：
+
+```bash
+.environments/robot/bin/python robot/retarget.py prepare --source "$HOI_DATA_ROOT"
+.environments/robot/bin/python robot/retarget.py batch
+.environments/robot/bin/python robot/run_batch.py --end 15
+```
+
 [安装问题](DEPENDENCIES.md) · [数据格式](docs/DATA_FORMAT.md) · [手部标定](docs/HAND_CALIBRATION.md) · [第三方许可证](THIRD_PARTY.md) · [当前可复现范围](docs/REPRODUCIBILITY.md)

@@ -44,3 +44,13 @@ These display assets are explicitly hashed in `configs/source-assets.json`.
 ## Integration license boundary
 
 A parent repository license does not replace any third-party license in this tree. The project-owned integration code still needs an explicit license decision. HO-Cap AGPL and FoundationPose/EasyMocap noncommercial terms need compatibility review for the combined Final workflow; external installation is not a compatibility resolution. See `docs/REPRODUCIBILITY.md`.
+
+## Robot retargeting and dual-arm physics (`robot/`)
+
+| Component | Source handling | Observed upstream/snapshot | License evidence |
+| --- | --- | --- | --- |
+| Do as I Do `retargeting` | Python package vendored as `robot/sim/retargeting`; three local changes listed in its `LOCAL_CHANGES.md` | [malik-group/do-as-i-do](https://github.com/malik-group/do-as-i-do) `824591b808c342b20079c3b4198a8c2bdf88c74e` | `licenses/do-as-i-do.txt`, MIT |
+| Sharpa / MANO robot models | Not committed; `scripts/fetch_external.py do-as-i-do` checks out the pinned commit into ignored `.external/do-as-i-do` | Same commit, `retargeting/retargeting/assets/robots/` | Distributed with the Do as I Do repository; no separate license file in the asset directory |
+| UR3e MJCF | Not committed; operator places `ur3e.xml` and its OBJ meshes in `$BIHOI_ROBOT_DATA/demo/ur3e/` | MJCF derived from ROS-Industrial `ur_e_description` (see the README shipped next to `ur3e.xml`) | `licenses/UR3e-MJCF.txt`, BSD-3-Clause (ROS Industrial Consortium) |
+| SPIDER | Not vendored. `robot/sim/spider_arm_mpc.py` follows the SPIDER sampling-MPC procedure and reward defaults (`spider/optimizers/sampling.py`, `simulators/mjwp.py`) | [facebookresearch/spider](https://github.com/facebookresearch/spider) `44717007de41cbef7565dff7ff9f4453557a2d3d` | CC-BY-NC 4.0 upstream; review before any non-research use |
+| MuJoCo, MuJoCo Warp, Warp, mink, CoACD, smplx, viser | Pinned package installs (`environments/robot.requirements.txt`) | MuJoCo Warp Git commit pinned in the requirements file | Follow each upstream license; smplx/MANO terms are research-only |

@@ -1,8 +1,9 @@
-"""Fetch pinned upstream HO-Cap source into an ignored operator dependency directory."""
+"""Fetch pinned upstream HO-Cap / Do as I Do source into an ignored operator dependency directory."""
 import argparse,os,subprocess
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-SOURCES={'hocap':('HO-Cap-Annotation','https://github.com/JWRoboticsVision/HO-Cap-Annotation.git','f554ecdfdd1230f277a4dae443b104914caeb5a7')}
+SOURCES={'hocap':('HO-Cap-Annotation','https://github.com/JWRoboticsVision/HO-Cap-Annotation.git','f554ecdfdd1230f277a4dae443b104914caeb5a7'),
+ 'do-as-i-do':('do-as-i-do','https://github.com/malik-group/do-as-i-do.git','824591b808c342b20079c3b4198a8c2bdf88c74e')}
 def run(args,cwd):return subprocess.check_output(args,cwd=cwd,text=True).strip()
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('component',choices=SOURCES);p.add_argument('--dry-run',action='store_true');p.add_argument('--source-checkout',type=Path,help='Optional existing source checkout: read Git objects locally rather than downloading');a=p.parse_args()
